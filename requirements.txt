@@ -1,0 +1,9 @@
+# Required
+pefile>=2023.2.7
+
+# Optional: nicer console output
+# rich
+
+# Optional: PyInstaller decompilation helpers (pip install .[decompile])
+# decompyle3>=3.9.0
+# uncompyle6>=3.9.0

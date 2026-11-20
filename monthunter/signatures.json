@@ -1,0 +1,494 @@
+{
+  "database_version": "4.0_ULTIMATE_MERGE",
+  "rules": [
+    {
+      "name": "MALWARE_FAMILY_njRAT",
+      "description": "Detects njRAT/Bladabindi RAT indicators",
+      "severity": "CRITICAL",
+      "min_matches": 3,
+      "strings": [
+        "SEE_MASK_NOZONECHECKS",
+        "netsh firewall add allowedprogram",
+        "[kl]",
+        "cmd.exe /c ping 0 -n 2"
+      ],
+      "mitre": [
+        "T1219",
+        "T1562.004"
+      ]
+    },
+    {
+      "name": "MALWARE_FAMILY_REDLINE_STEALER",
+      "description": "Detects RedLine/Meta/Vidar InfoStealer artifacts",
+      "severity": "CRITICAL",
+      "min_matches": 3,
+      "strings": [
+        "Discord Token",
+        "os_crypt",
+        "encrypted_key",
+        "Metamask",
+        "Exodus"
+      ],
+      "mitre": [
+        "T1555.003",
+        "T1539",
+        "T1528"
+      ]
+    },
+    {
+      "name": "THREAT_COBALT_STRIKE",
+      "description": "Detects Cobalt Strike Beacon / Reflective Loader indicators",
+      "severity": "CRITICAL",
+      "min_matches": 2,
+      "strings": [
+        "ReflectiveLoader",
+        "beacon.dll",
+        "%s as %s\\%s: %d",
+        "IEX (New-Object Net.WebClient)",
+        "powershell -nop -w hidden -encodedcommand",
+        "var_run_id"
+      ],
+      "mitre": [
+        "T1055",
+        "T1059.001",
+        "T1071.001"
+      ]
+    },
+    {
+      "name": "THREAT_CREDENTIAL_DUMPING",
+      "description": "Detects tools like Mimikatz or LSASS dumpers",
+      "severity": "CRITICAL",
+      "min_matches": 1,
+      "strings": [
+        "sekurlsa::logonpasswords",
+        "lsadump::lsa",
+        "lsadump::sam",
+        "mimikatz",
+        "kerberos::list",
+        "vault::cred"
+      ],
+      "mitre": [
+        "T1003.001"
+      ]
+    },
+    {
+      "name": "SUSP_PROCESS_INJECTION",
+      "description": "Detects code injection APIs often used by malware loaders.",
+      "severity": "HIGH",
+      "min_matches": 2,
+      "strings": [
+        "VirtualAllocEx",
+        "WriteProcessMemory",
+        "CreateRemoteThread",
+        "QueueUserAPC",
+        "SetThreadContext",
+        "NtUnmapViewOfSection",
+        "ReflectiveLoader"
+      ],
+      "mitre": [
+        "T1055"
+      ]
+    },
+    {
+      "name": "SUSP_SCREEN_CAPTURE",
+      "description": "Detects GDI/User32 APIs used for spying/screenshots.",
+      "severity": "MEDIUM",
+      "min_matches": 2,
+      "strings": [
+        "BitBlt",
+        "GetDC",
+        "ReleaseDC",
+        "CreateDIBSection",
+        "CreateCompatibleBitmap",
+        "gdi32.dll",
+        "user32.dll"
+      ],
+      "mitre": [
+        "T1113"
+      ]
+    },
+    {
+      "name": "SUSP_PERSISTENCE_LINUX_AUTOSTART",
+      "description": "Detects Linux persistence locations (cron/systemd/rc.local).",
+      "severity": "MEDIUM",
+      "min_matches": 2,
+      "strings": [
+        "/etc/cron",
+        "crontab",
+        "/etc/systemd/system",
+        "/lib/systemd/system",
+        "rc.local",
+        "/etc/init.d",
+        "~/.config/autostart",
+        "LD_PRELOAD"
+      ],
+      "mitre": [
+        "T1053.003",
+        "T1543.002"
+      ]
+    },
+    {
+      "name": "SUSP_PERSISTENCE_MACOS_LAUNCHD",
+      "description": "Detects macOS persistence locations (LaunchAgents/Daemons).",
+      "severity": "MEDIUM",
+      "min_matches": 2,
+      "strings": [
+        "LaunchAgents",
+        "LaunchDaemons",
+        "com.apple.launchd",
+        ".plist"
+      ],
+      "mitre": [
+        "T1543.001"
+      ]
+    },
+    {
+      "name": "THREAT_LINUX_BOTNET",
+      "description": "Detects Mirai/Gafgyt/Tsunami IoT malware indicators",
+      "severity": "HIGH",
+      "min_matches": 2,
+      "strings": [
+        "/bin/busybox",
+        "wget http",
+        "tftp -g",
+        "chmod +x",
+        "/etc/init.d/iptables stop",
+        "rm -rf /var/log",
+        "::ffff:",
+        "POST /CCTV/query"
+      ],
+      "mitre": [
+        "T1498",
+        "T1105"
+      ]
+    },
+    {
+      "name": "SUSP_WEBSHELL_INDICATORS",
+      "description": "Detects PHP/ASP/JSP Webshells strings",
+      "severity": "HIGH",
+      "min_matches": 2,
+      "strings": [
+        "eval(base64_decode",
+        "cmd.exe /c",
+        "shell_exec(",
+        "passthru(",
+        "WScript.Shell",
+        "vbscript.encode",
+        "Ly9uIC0t",
+        "FilesMan"
+      ],
+      "mitre": [
+        "T1505.003"
+      ]
+    },
+    {
+      "name": "SUSP_ANTI_ANALYSIS",
+      "description": "Detects monitoring tools, VM evasion and Debuggers",
+      "severity": "HIGH",
+      "min_matches": 2,
+      "strings": [
+        "Wireshark",
+        "ProcessHacker",
+        "Procmon",
+        "dnSpy",
+        "x64dbg",
+        "OlyDbg",
+        "VBoxService",
+        "V2Box",
+        "VMware",
+        "SbieDll.dll",
+        "IsDebuggerPresent",
+        "CheckRemoteDebuggerPresent"
+      ],
+      "mitre": [
+        "T1497",
+        "T1622"
+      ]
+    },
+    {
+      "name": "SUSP_USB_SPREADING",
+      "description": "Detects worm-like capabilities (Autorun/LNK)",
+      "severity": "MEDIUM",
+      "min_matches": 2,
+      "strings": [
+        "autorun.inf",
+        ".lnk",
+        "cmd.exe /c start",
+        "GetDriveType",
+        "DriveType"
+      ],
+      "mitre": [
+        "T1091"
+      ]
+    },
+    {
+      "name": "SUSP_RANSOMWARE_BEHAVIOR",
+      "description": "Detects crypto-locking, shadow copy deletion and ransom notes",
+      "severity": "CRITICAL",
+      "min_matches": 1,
+      "strings": [
+        "vssadmin.exe Delete Shadows",
+        "bcdedit /set {default} recoveryenabled No",
+        "wbadmin delete catalog",
+        "DECRYPT_FILES.txt",
+        "RESTORE_FILES.txt"
+      ],
+      "mitre": [
+        "T1486",
+        "T1490"
+      ]
+    },
+    {
+      "name": "SUSP_CRYPTOMINING",
+      "description": "Detects XMRig/Monero mining pools and configurations",
+      "severity": "HIGH",
+      "min_matches": 2,
+      "strings": [
+        "stratum+tcp",
+        "xmrig",
+        "nicehash",
+        "monero",
+        "wallet_address",
+        "pool.supportxmr.com",
+        "rx/0"
+      ],
+      "mitre": [
+        "T1496"
+      ]
+    },
+    {
+      "name": "SUSP_TUNNELING_TOOLS",
+      "description": "Detects use of hidden tunneling tools for C2",
+      "severity": "HIGH",
+      "min_matches": 1,
+      "strings": [
+        "ngrok.io",
+        "0.tcp.ngrok.io",
+        "serveo.net",
+        "localtunnel",
+        "tor.exe",
+        "torrc"
+      ],
+      "mitre": [
+        "T1572",
+        "T1090"
+      ]
+    },
+    {
+      "name": "SUSP_LOLBINS_DOWNLOADERS",
+      "description": "Detects usage of Living Off The Land binaries",
+      "severity": "MEDIUM",
+      "min_matches": 1,
+      "strings": [
+        "certutil -urlcache -split -f",
+        "bitsadmin /transfer",
+        "powershell IEX(New-Object",
+        "curl -O http"
+      ],
+      "mitre": [
+        "T1105",
+        "T1218"
+      ]
+    },
+    {
+      "name": "SUSP_REVERSE_SHELL",
+      "description": "Detects common one-liner reverse shell patterns",
+      "severity": "HIGH",
+      "min_matches": 1,
+      "strings": [
+        "nc -e /bin/sh",
+        "bash -i >& /dev/tcp/",
+        "python -c 'import socket,subprocess,os;",
+        "socat exec:'bash -li'",
+        "php -r '$sock=fsockopen("
+      ],
+      "mitre": [
+        "T1059"
+      ]
+    },
+    {
+      "name": "SUSP_LATERAL_MOVEMENT_SMB",
+      "description": "Detects spreading via Windows Network Shares (SMB/Admin$)",
+      "severity": "HIGH",
+      "min_matches": 2,
+      "strings": [
+        "\\\\ADMIN$",
+        "\\\\C$",
+        "ipc$",
+        "net use",
+        "psexec",
+        "wmic process call create",
+        "net view"
+      ],
+      "mitre": [
+        "T1021.002",
+        "T1570"
+      ]
+    },
+    {
+      "name": "SUSP_CLOUD_METADATA_THEFT",
+      "description": "Detects attempts to steal AWS/Azure/GCP credentials from metadata services",
+      "severity": "CRITICAL",
+      "min_matches": 1,
+      "strings": [
+        "169.254.169.254",
+        "computeMetadata/v1",
+        "iam/security-credentials",
+        "meta-data/instance-id",
+        "metadata.google.internal"
+      ],
+      "mitre": [
+        "T1552.005"
+      ]
+    },
+    {
+      "name": "THREAT_DESTRUCTIVE_WIPER",
+      "description": "Detects Wiper malware trying to destroy the MBR or raw disk",
+      "severity": "CRITICAL",
+      "min_matches": 1,
+      "strings": [
+        "\\\\.\\PhysicalDrive0",
+        "IOCTL_DISK_SET_DRIVE_LAYOUT"
+      ],
+      "mitre": [
+        "T1561"
+      ]
+    },
+    {
+      "name": "MALWARE_FAMILY_JAVA_RAT",
+      "description": "Detects Adwind/JRAT indicators (Cross-platform Java Malware)",
+      "severity": "HIGH",
+      "min_matches": 2,
+      "strings": [
+        "java.lang.Runtime",
+        "java.net.Socket",
+        "dalvik.system.DexClassLoader",
+        "loadClass",
+        "META-INF/MANIFEST.MF",
+        "stub.jar"
+      ],
+      "mitre": [
+        "T1219"
+      ]
+    },
+    {
+      "name": "SUSP_AMSI_BYPASS",
+      "description": "Detects AMSI tampering used to evade script scanning",
+      "severity": "HIGH",
+      "min_matches": 1,
+      "mitre": [
+        "T1562.001"
+      ],
+      "strings": [
+        "amsiInitFailed",
+        "AmsiUtils"
+      ]
+    },
+    {
+      "name": "SUSP_DEFENDER_TAMPERING",
+      "description": "Detects attempts to disable or exclude paths from Microsoft Defender",
+      "severity": "HIGH",
+      "min_matches": 1,
+      "mitre": [
+        "T1562.001"
+      ],
+      "strings": [
+        "Add-MpPreference -ExclusionPath",
+        "Set-MpPreference -DisableRealtimeMonitoring",
+        "DisableAntiSpyware",
+        "sc stop windefend",
+        "sc config windefend start= disabled"
+      ]
+    },
+    {
+      "name": "SUSP_UAC_BYPASS",
+      "description": "Detects common auto-elevating binary hijacks used to bypass UAC",
+      "severity": "HIGH",
+      "min_matches": 1,
+      "mitre": [
+        "T1548.002"
+      ],
+      "strings": [
+        "\\ms-settings\\shell\\open\\command",
+        "sdclt.exe /kickoffelev",
+        "ICMLuaUtil"
+      ]
+    },
+    {
+      "name": "SUSP_KEYLOGGER",
+      "description": "Detects keystroke-capture API combinations",
+      "severity": "HIGH",
+      "min_matches": 3,
+      "mitre": [
+        "T1056.001"
+      ],
+      "strings": [
+        "GetAsyncKeyState",
+        "SetWindowsHookEx",
+        "GetKeyboardState",
+        "GetForegroundWindow",
+        "GetKeyNameText"
+      ]
+    },
+    {
+      "name": "SUSP_WINDOWS_PERSISTENCE",
+      "description": "Detects Windows persistence via Run keys, scheduled tasks or services",
+      "severity": "MEDIUM",
+      "min_matches": 2,
+      "mitre": [
+        "T1547.001",
+        "T1053.005",
+        "T1543.003"
+      ],
+      "strings": [
+        "CurrentVersion\\Run",
+        "schtasks /create",
+        "sc create",
+        "reg add hkcu"
+      ]
+    },
+    {
+      "name": "SUSP_EXFIL_WEBHOOK",
+      "description": "Detects data exfiltration through Discord webhooks or Telegram bots",
+      "severity": "HIGH",
+      "min_matches": 1,
+      "mitre": [
+        "T1567",
+        "T1102"
+      ],
+      "strings": [
+        "discord.com/api/webhooks/",
+        "discordapp.com/api/webhooks/",
+        "api.telegram.org/bot"
+      ]
+    },
+    {
+      "name": "SUSP_SHADOW_COPY_DELETION",
+      "description": "Detects backup/recovery destruction commands",
+      "severity": "CRITICAL",
+      "min_matches": 1,
+      "mitre": [
+        "T1490"
+      ],
+      "strings": [
+        "vssadmin delete shadows",
+        "wmic shadowcopy delete"
+      ]
+    },
+    {
+      "name": "SUSP_LOG_CLEARING",
+      "description": "Detects event-log clearing used to remove traces",
+      "severity": "HIGH",
+      "min_matches": 1,
+      "mitre": [
+        "T1070.001"
+      ],
+      "strings": [
+        "wevtutil cl",
+        "wevtutil clear-log",
+        "Clear-EventLog",
+        "fsutil usn deletejournal"
+      ]
+    }
+  ]
+}
