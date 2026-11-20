@@ -65,3 +65,30 @@ def test_url_host_still_reported_even_if_odd():
     res = extract_iocs_from_text("http://files.example.org/kernel32.dll")
     assert "files.example.org" in res["domains"]
     assert "kernel32.dll" not in res["domains"]
+
+
+def test_elf_section_names_are_not_domains():
+    # .build, .host and .ro are real TLDs, so only the section-name check can drop these
+    text = ".gnu.hash\n.gnu.version\n.note.ABI-tag\n.note.gnu.build-id\n.rela.dyn\n.data.rel.ro\n.build\nreal-c2.example.net"
+    assert extract_iocs_from_text(text)["domains"] == ["real-c2.example.net"]
+
+
+def test_identifiers_without_a_real_tld_are_not_domains():
+    text = "System.Collections.Generic $PSBoundParameters.ContainsKey $err.Exception.Message bad.example.com"
+    assert extract_iocs_from_text(text)["domains"] == ["bad.example.com"]
+
+
+def test_shared_library_and_debug_file_names_are_not_domains():
+    text = "libc.so ld-linux-x86-64.so libcurl.so curl.debug host.example.org"
+    assert extract_iocs_from_text(text)["domains"] == ["host.example.org"]
+
+
+def test_real_and_special_use_tlds_are_kept():
+    text = "evil.xyz hidden1234567890abcdef.onion shop.top c2.evil.invalid lab.host.test"
+    assert set(extract_iocs_from_text(text)["domains"]) == {
+        "evil.xyz",
+        "hidden1234567890abcdef.onion",
+        "shop.top",
+        "c2.evil.invalid",
+        "lab.host.test",
+    }

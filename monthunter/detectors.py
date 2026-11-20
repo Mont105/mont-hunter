@@ -113,16 +113,67 @@ _IP_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 _DOMAIN_RE = re.compile(r"\b(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,63}\b")
 
 
-# Trailing "labels" that are file extensions, not TLDs (kernel32.dll, gate.php, ...).
+# Trailing "labels" that are file extensions, not TLDs (kernel32.dll, gate.php, libc.so, tool.debug, ...).
+# ``so`` is also Somalia's ccTLD, but in a binary it is almost always a shared library, so a bare ``name.so``
+# is skipped here. A ``.so`` host inside a URL is still reported through the URL path.
 _FILE_EXTENSIONS = frozenset(
     "dll exe sys drv ocx scr msi cab bat cmd vbs lnk tmp dat bin log txt ini cfg config conf "
     "json xml yml yaml db lib obj pdb res tlb manifest resources pyc pyd jar class "
-    "jpg jpeg png gif bmp ico svg css js html htm php asp aspx jsp".split()
+    "jpg jpeg png gif bmp ico svg css js html htm php asp aspx jsp so dylib debug ko".split()
 )
 
 
 def _looks_like_filename(domain: str) -> bool:
     return domain.rsplit(".", 1)[-1].lower() in _FILE_EXTENSIONS
+
+
+def _load_tlds() -> frozenset:
+    """Top-level domains from the IANA root zone list (``tlds.txt``) plus the reserved special-use names.
+
+    The list comes from https://data.iana.org/TLD/tlds-alpha-by-domain.txt; its first line records the version.
+    Added on top of it: ``onion`` (RFC 7686) and ``test``, ``example`` and ``invalid`` (RFC 2606), which synthetic
+    samples and lab fixtures use. An empty set (file missing) disables the check instead of dropping every domain.
+    """
+    try:
+        lines = Path(__file__).with_name("tlds.txt").read_text(encoding="ascii").splitlines()
+    except OSError:
+        return frozenset()
+    tlds = {ln.strip().lower() for ln in lines if ln.strip() and not ln.startswith("#")}
+    tlds.update({"onion", "test", "example", "invalid"})
+    return frozenset(tlds)
+
+
+_TLDS = _load_tlds()
+
+
+def _has_known_tld(domain: str) -> bool:
+    """False for identifiers such as ``System.Collections.Generic`` or ``gnu.hash`` (no such TLD exists)."""
+    return not _TLDS or domain.rsplit(".", 1)[-1].lower() in _TLDS
+
+
+# Section names from the System V gABI ("Special Sections") and the GNU/Linux extensions. Strings like
+# ".gnu.hash" or ".note.ABI-tag" sit in every ELF string table and look like domains once the leading dot is
+# dropped (some of them end in a real TLD: .build, .host, .ro).
+_ELF_SECTIONS = tuple(
+    (
+        ".bss .comment .ctors .data .data1 .data.rel.ro .data.rel.ro.local .debug .dtors .dynamic .dynstr .dynsym "
+        ".eh_frame .eh_frame_hdr .fini .fini_array .gcc_except_table .gnu.hash .gnu.version .gnu.version_d "
+        ".gnu.version_r .gnu.warning .gnu_debugaltlink .gnu_debuglink .got .got.plt .hash .init .init_array .interp "
+        ".line .note .note.ABI-tag .note.GNU-stack .note.gnu.build-id .note.gnu.property .plt .plt.got .plt.sec "
+        ".preinit_array .rel.dyn .rel.plt .rela.dyn .rela.plt .relr.dyn .rodata .rodata1 .shstrtab .strtab .symtab "
+        ".symtab_shndx .tbss .tdata .tdata1 .text .tm_clone_table"
+    )
+    .lower()
+    .split()
+)
+
+
+def _is_elf_section_name(text: str, start: int, domain: str) -> bool:
+    """True when ``domain`` is the tail of a section name such as ``.note.gnu.build-id`` (preceded by its dot)."""
+    if start == 0 or text[start - 1] != ".":
+        return False
+    probe = "." + domain.lower()
+    return any(section.startswith(probe) for section in _ELF_SECTIONS)
 
 
 def _valid_ip(ip: str) -> bool:
@@ -146,9 +197,11 @@ def extract_iocs_from_text(text: str) -> Dict[str, List[str]]:
             ips.add(ip)
 
     domains: Set[str] = set(domains_from_urls)
-    for dom in _DOMAIN_RE.findall(text):
-        if not _looks_like_filename(dom):
-            domains.add(dom.lower())
+    for m in _DOMAIN_RE.finditer(text):
+        dom = m.group(0)
+        if _looks_like_filename(dom) or not _has_known_tld(dom) or _is_elf_section_name(text, m.start(), dom):
+            continue
+        domains.add(dom.lower())
     domains = {d for d in domains if not _is_benign_domain(d)}
 
     return {

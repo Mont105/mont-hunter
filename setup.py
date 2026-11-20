@@ -6,6 +6,7 @@ setup(
     description="Static triage for binaries and installers with IOC extraction and optional YARA scanning.",
     author="Mont105",
     packages=find_packages(),
+    package_data={"monthunter": ["signatures.json", "tlds.txt"]},
     python_requires=">=3.10",
     install_requires=["pefile>=2023.2.7"],
     extras_require={
